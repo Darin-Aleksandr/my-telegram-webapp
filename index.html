@@ -3,12 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram WebApp</title>
+    <title>Telegram WebApp Token Generator</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #user-data {
+            margin-bottom: 20px;
+        }
+        #download-button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #download-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello, Telegram WebApp!</h1>
-    <div id="user-data"></div>
+    <h1>Telegram WebApp Token Generator</h1>
+    <div id="user-data">
+        <p>User data will be displayed here.</p>
+    </div>
+    <button id="download-button" disabled>Download Token</button>
 
     <script>
         // Инициализация WebApp
@@ -18,8 +42,9 @@
         const user = tg.initDataUnsafe.user;
 
         // Отображаем данные пользователя на странице
+        const userDataElement = document.getElementById('user-data');
         if (user) {
-            document.getElementById('user-data').innerHTML = `
+            userDataElement.innerHTML = `
                 <p>ID: ${user.id}</p>
                 <p>First Name: ${user.first_name}</p>
                 <p>Last Name: ${user.last_name}</p>
@@ -28,14 +53,78 @@
                 <p>Photo URL: <a href="${user.photo_url}" target="_blank">View Photo</a></p>
             `;
         } else {
-            document.getElementById('user-data').innerHTML = `<p>User data not available.</p>`;
+            userDataElement.innerHTML = `<p>User data not available.</p>`;
         }
 
-        // Показываем кнопку "Close" для закрытия WebApp
-        tg.MainButton.setText('Close').show();
-        tg.MainButton.onClick(() => {
-            tg.close();
-        });
+        // Генерация фиктивного query_id
+        const generateQueryId = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let queryId = '';
+            for (let i = 0; i < 20; i++) {
+                queryId += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return queryId;
+        };
+
+        // Генерация фиктивной подписи (signature)
+        const generateSignature = () => {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
+            let signature = '';
+            for (let i = 0; i < 86; i++) {
+                signature += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return signature;
+        };
+
+        // Генерация фиктивного хэша (hash)
+        const generateHash = () => {
+            const chars = 'abcdef0123456789';
+            let hash = '';
+            for (let i = 0; i < 64; i++) {
+                hash += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return hash;
+        };
+
+        // Формируем токен
+        const generateToken = () => {
+            if (!user) return null;
+
+            const authDate = Math.floor(Date.now() / 1000); // Текущая дата в формате Unix timestamp
+            const queryId = generateQueryId(); // Генерация query_id
+            const signature = generateSignature(); // Генерация подписи
+            const hash = generateHash(); // Генерация хэша
+
+            const token = `Authorization: Bearer query_id=${queryId}&user=${encodeURIComponent(JSON.stringify(user))}&auth_date=${authDate}&signature=${signature}&hash=${hash}`;
+            return token;
+        };
+
+        // Скачивание токена
+        const downloadToken = () => {
+            const token = generateToken();
+            if (!token) {
+                alert("Token generation failed. User data is missing.");
+                return;
+            }
+
+            // Создаем файл для скачивания
+            const blob = new Blob([token], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'telegram_token.txt'; // Имя файла
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        // Активируем кнопку скачивания
+        const downloadButton = document.getElementById('download-button');
+        if (user) {
+            downloadButton.disabled = false;
+            downloadButton.addEventListener('click', downloadToken);
+        }
     </script>
 </body>
 </html>
