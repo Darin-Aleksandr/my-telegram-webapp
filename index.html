@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram WebApp</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>Hello, Telegram WebApp!</h1>
+    <div id="user-data"></div>
+
+    <script>
+        // Инициализация WebApp
+        const tg = window.Telegram.WebApp;
+
+        // Получаем данные пользователя
+        const user = tg.initDataUnsafe.user;
+
+        // Отображаем данные пользователя на странице
+        if (user) {
+            document.getElementById('user-data').innerHTML = `
+                <p>ID: ${user.id}</p>
+                <p>First Name: ${user.first_name}</p>
+                <p>Last Name: ${user.last_name}</p>
+                <p>Username: ${user.username}</p>
+                <p>Language: ${user.language_code}</p>
+                <p>Photo URL: <a href="${user.photo_url}" target="_blank">View Photo</a></p>
+            `;
+        } else {
+            document.getElementById('user-data').innerHTML = `<p>User data not available.</p>`;
+        }
+
+        // Показываем кнопку "Close" для закрытия WebApp
+        tg.MainButton.setText('Close').show();
+        tg.MainButton.onClick(() => {
+            tg.close();
+        });
+    </script>
+</body>
+</html>
